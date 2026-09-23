@@ -1,5 +1,75 @@
 # Changelog
 
+## [1.16.10](https://github.com/openai/openai-cli/compare/v1.16.9...v1.16.10) (2026-09-23)
+
+
+### Bug Fixes
+
+* **completion:** resolve command aliases while traversing commands ([#221](https://github.com/openai/openai-cli/issues/221)) ([8c43b32](https://github.com/openai/openai-cli/commit/8c43b328961356f950ed1c9f2da9726916ac03f0))
+* **jsonview:** propagate lazy-loading failures ([#219](https://github.com/openai/openai-cli/issues/219)) ([ef82331](https://github.com/openai/openai-cli/commit/ef82331c2557390f9d24818f05e5b7f4b87b7ea7))
+
+## [1.16.9](https://github.com/openai/openai-cli/compare/v1.16.8...v1.16.9) (2026-09-23)
+
+
+### Bug Fixes
+
+* **cmd:** expand file references in nullable string flags ([#216](https://github.com/openai/openai-cli/issues/216)) ([9b46ed6](https://github.com/openai/openai-cli/commit/9b46ed60c9bc5affc2e2aec4df41e14347cfebcb))
+
+## [1.16.8](https://github.com/openai/openai-cli/compare/v1.16.7...v1.16.8) (2026-09-23)
+
+
+### Bug Fixes
+
+* **requestflag:** merge inner flags into untyped array literals ([#211](https://github.com/openai/openai-cli/issues/211)) ([808fb45](https://github.com/openai/openai-cli/commit/808fb45a8cd3797d7171bb2b0758bca01ef10b01))
+
+## [1.16.7](https://github.com/openai/openai-cli/compare/v1.16.6...v1.16.7) (2026-09-23)
+
+
+### Bug Fixes
+
+* **jsonview:** keep single-column stream tables column-shaped ([#207](https://github.com/openai/openai-cli/issues/207)) ([64c5f23](https://github.com/openai/openai-cli/commit/64c5f23479ac43638cb91d3f9beb72063ceb3ea7))
+
+## [1.16.6](https://github.com/openai/openai-cli/compare/v1.16.5...v1.16.6) (2026-09-23)
+
+
+### Bug Fixes
+
+* **cli:** reject non-finite float flag values ([#200](https://github.com/openai/openai-cli/issues/200)) ([c8dd3e9](https://github.com/openai/openai-cli/commit/c8dd3e90a1a0cc60abab60823902bcb50f1c86d0))
+
+## [1.16.5](https://github.com/openai/openai-cli/compare/v1.16.4...v1.16.5) (2026-09-23)
+
+
+### Chores
+
+* **deps:** update openai-go to v3.66.0 ([#241](https://github.com/openai/openai-cli/issues/241)) ([6cc2737](https://github.com/openai/openai-cli/commit/6cc27376fcf4e4634cc109f1dd0f9ffe62a4ed2c))
+
+
+### Documentation
+
+* clarify collaborator-only pull request policy ([#242](https://github.com/openai/openai-cli/issues/242)) ([a5d5d0c](https://github.com/openai/openai-cli/commit/a5d5d0c8eb402f7d7133a8b7eff5f9931fd51d59))
+
+## [1.16.4](https://github.com/openai/openai-cli/compare/v1.16.3...v1.16.4) (2026-09-23)
+
+
+### Chores
+
+* **api:** clarify Chat Completions seed range ([#239](https://github.com/openai/openai-cli/issues/239)) ([fcda650](https://github.com/openai/openai-cli/commit/fcda65015bd46032a328d3590f8c76f13ba6251d))
+
+## [1.16.3](https://github.com/openai/openai-cli/compare/v1.16.2...v1.16.3) (2026-09-22)
+
+
+### Chores
+
+* **api:** Refresh API metadata ([#237](https://github.com/openai/openai-cli/issues/237)) ([03c94ac](https://github.com/openai/openai-cli/commit/03c94ac020c9c7bf9e8b26bdb89d7afe8715c14a))
+* **deps:** update openai-go to v3.65.0 ([#233](https://github.com/openai/openai-cli/issues/233)) ([e90f9d9](https://github.com/openai/openai-cli/commit/e90f9d9b399946ea1bd7be10a02b476ff43163e5))
+
+## [1.16.2](https://github.com/openai/openai-cli/compare/v1.16.1...v1.16.2) (2026-09-22)
+
+
+### Chores
+
+* **api:** document GPT-Rosalind research model ([#234](https://github.com/openai/openai-cli/issues/234)) ([8a9731c](https://github.com/openai/openai-cli/commit/8a9731ce4f5056561bc9256614b57adc610e6ce6))
+
 ## [1.16.1](https://github.com/openai/openai-cli/compare/v1.16.0...v1.16.1) (2026-09-22)
 
 
