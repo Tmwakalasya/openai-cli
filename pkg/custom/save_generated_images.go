@@ -20,23 +20,9 @@ const defaultSavedImageModel = "gpt-image-2.5-sunburst"
 const imageGenerationQuickHelp = `{{$bin := or (index .Root.Metadata "help-invocation") "openai"}}Make an image
   {{$bin}} images generate --prompt "A tiny orange robot"
 
-Default: 1 PNG, automatic size and quality.
-Model: ` + defaultSavedImageModel + `. Model access varies by key.
-Saves to ~/Downloads/gpt-images/ and creates the folder automatically.
-Names come from your prompt. Existing files are kept. Every saved path is printed.
+Replace the prompt with the image you want.
+Saves to ~/Downloads/gpt-images/.
 
-Optional:
-  --name robot                 Choose a filename (extension is automatic)
-  --output-dir "~/Downloads"    Save in an existing folder
-  --count 2                    Make two images (alias for -n)
-  --inline off                 Save without a terminal preview
-  --inline on                  Allow a sharp preview in local Apple Terminal
-  --partial-images 2           Preview progress, then save the final image
-  --model gpt-image-2.5-flare    Choose an exact model ID
-  --output-format webp         Choose PNG, JPEG or WebP
-
-Scripts: --format json returns API JSON without saving or CLI defaults.
-Redirected output still saves images, without previews.
 Full help: {{$bin}} help --all images generate
 Key setup: {{$bin}} help setup
 `

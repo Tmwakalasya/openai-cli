@@ -106,14 +106,14 @@ func TestBriefHelpKeepsExplicitFeatureTemplates(t *testing.T) {
 	}
 }
 
-func TestBriefImageExampleUsesExplicitModelAndCurrentOutput(t *testing.T) {
+func TestBriefImageExampleUsesMinimalInput(t *testing.T) {
 	got := briefHelp(&cli.Command{Name: "generate"}, "./openai", "images generate")
-	for _, text := range []string{`./openai images generate --model `, `--prompt "A tiny orange robot"`, "JSON", "data or a URL"} {
+	for _, text := range []string{`./openai images generate --prompt "A tiny orange robot"`, "Full help:"} {
 		if !strings.Contains(got, text) {
 			t.Errorf("image help lacks %q: %s", text, got)
 		}
 	}
-	for _, text := range []string{"Downloads", "--output-dir", "images preview", "--inline", "default model"} {
+	for _, text := range []string{"JSON containing image data", "--model gpt-image-1.5"} {
 		if strings.Contains(got, text) {
 			t.Errorf("image help advertises an unshipped behavior: %q", text)
 		}
@@ -123,20 +123,40 @@ func TestBriefImageExampleUsesExplicitModelAndCurrentOutput(t *testing.T) {
 func TestGoRunInvocationIsCopyableFromSourceCheckout(t *testing.T) {
 	project := t.TempDir()
 	t.Chdir(project)
+	cacheKey := strings.Repeat("a1", 32)
+	var paths []string
+	for _, executable := range []string{"openai", "openai.exe"} {
+		paths = append(paths,
+			filepath.Join(os.TempDir(), "go-build12345", "b001", "exe", executable),
+			filepath.Join(os.TempDir(), "custom cache", "a1", cacheKey+"-d", executable),
+		)
+	}
+	for _, path := range paths {
+		if got := Invocation("openai", []string{path}); got != "openai" {
+			t.Errorf("go-run path outside a checkout %q became %q", path, got)
+		}
+	}
 	if err := os.MkdirAll(filepath.Join("cmd", "openai"), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join("cmd", "openai", "main.go"), []byte("package main\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	for _, executable := range []string{"openai", "openai.exe"} {
-		path := filepath.Join(os.TempDir(), "go-build12345", "b001", "exe", executable)
+	for _, path := range paths {
 		if got := Invocation("openai", []string{path}); got != "go run ./cmd/openai" {
-			t.Errorf("temporary go-run path %q became %q", path, got)
+			t.Errorf("go-run path inside a checkout %q became %q", path, got)
 		}
 	}
-	if got := Invocation("openai", []string{"./openai"}); got != "./openai" {
-		t.Errorf("installed/local executable example changed: %q", got)
+	for _, path := range []string{
+		"./openai",
+		filepath.Join("go-build-tools", "openai"),
+		filepath.Join("cache", "a1", "not-a-digest-d", "openai"),
+		filepath.Join("cache", "a2", cacheKey+"-d", "openai"),
+		filepath.Join("cache", "z1", strings.Repeat("z1", 32)+"-d", "openai"),
+	} {
+		if got := Invocation("openai", []string{path}); got != path {
+			t.Errorf("installed/local executable %q changed to %q", path, got)
+		}
 	}
 }
 
