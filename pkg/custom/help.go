@@ -10,6 +10,7 @@ import (
 
 // ConfigureHelp decorates help without changing API commands or their defaults.
 func ConfigureHelp(root *cli.Command, args []string) ([]string, bool, error) {
+	orderImageCommands(root)
 	configureHelpGroups(root)
 	configureImageHelpInvocation(root, clihelp.Invocation(root.Name, args))
 	// Full help documents credential flags, but must never echo their values.
