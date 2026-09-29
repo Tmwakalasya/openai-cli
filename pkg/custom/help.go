@@ -1,6 +1,8 @@
 package custom
 
 import (
+	"strings"
+
 	"github.com/openai/openai-cli/internal/clihelp"
 	"github.com/openai/openai-cli/internal/requestflag"
 	"github.com/urfave/cli/v3"
@@ -9,6 +11,7 @@ import (
 // ConfigureHelp decorates help without changing API commands or their defaults.
 func ConfigureHelp(root *cli.Command, args []string) ([]string, bool, error) {
 	configureHelpGroups(root)
+	configureImageHelpInvocation(root, clihelp.Invocation(root.Name, args))
 	// Full help documents credential flags, but must never echo their values.
 	for _, flag := range root.Flags {
 		if flag, ok := flag.(*requestflag.Flag[string]); ok {
@@ -19,6 +22,24 @@ func ConfigureHelp(root *cli.Command, args []string) ([]string, bool, error) {
 		}
 	}
 	return clihelp.Configure(root, args)
+}
+
+func configureImageHelpInvocation(root *cli.Command, invocation string) {
+	images := root.Command("images")
+	if images == nil {
+		return
+	}
+	for name, description := range map[string]string{
+		"generate":         imageGenerationSavingHelp,
+		"edit":             imageEditSavingHelp,
+		"create-variation": imageVariationSavingHelp,
+	} {
+		if command := images.Command(name); command != nil {
+			// Descriptions are plain text, not templates. Start from the original
+			// each time so repeated help configuration cannot retain an old path.
+			command.Description = strings.Replace(description, "\n    openai ", "\n    "+invocation+" ", 1)
+		}
+	}
 }
 
 func configureHelpGroups(root *cli.Command) {
@@ -34,8 +55,12 @@ func configureHelpGroups(root *cli.Command) {
 		sections := append([]clihelp.FlagGroup(nil), groups...)
 		if image {
 			sections = append([]clihelp.FlagGroup{
-				{Title: "Image settings", Names: []string{"model", "n", "size", "quality", "background", "output-format", "output-compression", "moderation", "input-fidelity", "mask", "user"}},
-				{Title: "Saving and previews", Names: []string{"output-dir", "name", "inline", "stream", "partial-images", "response-format"}},
+				{Title: "Image settings", Names: []string{"model", "n", "size", "quality", "background", "moderation", "input-fidelity", "mask"}},
+				{Title: "Image file format", Names: []string{"output-format", "output-compression"}},
+				{Title: "Saving", Names: []string{"output-dir", "name"}},
+				{Title: "Terminal previews", Names: []string{"inline"}},
+				{Title: "Progress", Names: []string{"stream", "partial-images", "max-items"}},
+				{Title: "API response", Names: []string{"response-format"}},
 			}, sections...)
 		}
 		command.Metadata["help-flag-groups"] = sections

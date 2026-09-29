@@ -29,11 +29,11 @@ func TestMainImageProgressHelpExplainsAppleModes(t *testing.T) {
 			require.Empty(t, got.stderr)
 			text := strings.Join(strings.Fields(got.stdout), " ")
 			for _, guidance := range []string{
-				"Only the final image is saved to the output folder.",
-				"Apple Terminal's auto mode uses color blocks.",
-				"--inline on or a saved on preference enables sharp progress",
-				"may request Terminal Automation",
-				"private preview caches for scrollback",
+				"When saving, only the final image is kept.",
+				"Local Apple Terminal: auto uses color blocks",
+				"Uses your saved preference unless set",
+				"on permits sharp previews",
+				"Terminal Automation and private font caches",
 			} {
 				require.Contains(t, text, guidance)
 			}

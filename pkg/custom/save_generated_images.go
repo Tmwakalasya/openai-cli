@@ -27,34 +27,13 @@ Full help: {{$bin}} help --all images generate
 Key setup: {{$bin}} help setup
 `
 
-const imageGenerationSavingHelp = `Images save automatically to ~/Downloads/gpt-images/, including in pipes.
-The default folder is created. --output-dir chooses an existing folder.
-Names come from the prompt; --name overrides them. Existing names get -2, -3,
-etc. The returned PNG, JPEG or WebP bytes determine the file extension.
+const imageGenerationSavingHelp = `EXAMPLE
 
-When neither model nor response-format is supplied, saving uses
-` + defaultSavedImageModel + `, one PNG, automatic size, quality, background
-and moderation, no partial images, and no streaming. Flags and JSON/YAML stdin
-override these defaults, including nulls. --count is an alias for -n.
-Explicit models keep API defaults; explicit DALL-E models request b64_json.
-Your account must support the chosen model.
+    openai images generate --prompt "A tiny cat" --name cat
 
---format json (or another data format), --transform, --raw-output and
---response-format url keep API output without saving or applying CLI defaults.
-They cannot be combined with --name or --output-dir. --format auto and text save.
---output-format selects the image file format, separately from --format.
-
---stream true saves only the final image. Positive --partial-images enables
-streaming when saving; 1 to 3 progress previews are shown where supported.
-Only the final image is saved to the output folder. Apple Terminal's auto mode
-uses color blocks. --inline on or a saved on preference enables sharp progress
-and final previews; this may request Terminal Automation and keeps private
-preview caches for scrollback. Unavailable sharp progress is skipped.
-Streaming supports one final image. Use --format json --stream true for complete
-API events.
-Interactive terminals show an inline preview when supported. --inline off disables
-it. --inline on allows a local Apple Terminal image font while keeping ordinary
-text styling. Preview failures keep saved files. Pipes and CI never show previews.`
+Saves to ~/Downloads/gpt-images/. Use --output-dir to choose an existing folder.
+For API data without saving, use --format json without --name or --output-dir.
+`
 
 type imageOutputPlan struct {
 	directory, name string
