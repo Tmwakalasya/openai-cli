@@ -18,6 +18,9 @@ requesting an image, and Ctrl+C exits. Command previews and Ctrl+P support Bash,
 zsh, fish and PowerShell 7. In other or unidentified shells, generation remains
 available, but command printing is disabled with an explanation in the picker.
 
+An optional [Tab shortcut](image-picker-shortcuts.md) opens the same picker in
+Bash 4.3+, zsh and fish. Other shells use Enter.
+
 After a successful generation, the picker reopens below the saved result with
 the same image settings and an empty prompt. It remembers the last submitted
 image settings and save folder for next time; the description starts empty and
