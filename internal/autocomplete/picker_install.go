@@ -512,6 +512,12 @@ func renderInstalledPicker(options PickerInstallation) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	return renderPickerStartup(options, completion, picker, ""), nil
+}
+
+// Package startup leaves ordinary completion to the user's existing setup.
+// Both personal and package scripts share activation and disable handling.
+func renderPickerStartup(options PickerInstallation, completion, picker, fishPromptGuard string) []byte {
 	preamble, marker := "", ""
 	switch options.Shell {
 	case CompletionStyleZsh:
@@ -539,12 +545,12 @@ function openai_picker_disable
 end
 ` + declined + `function __openai_picker_install_on_prompt --on-event fish_prompt
     functions --erase __openai_picker_install_on_prompt
-` + declined + picker + `
+` + declined + fishPromptGuard + picker + `
     if set -q __openai_picker_modes[1]; set -gx OPENAI_PICKER_INTEGRATION fish; end
 end
 `
 	}
-	return []byte(pickerScriptHeader + preamble + completion + "\n" + picker + marker), nil
+	return []byte(pickerScriptHeader + preamble + completion + "\n" + picker + marker)
 }
 
 func openPickerDirectory(ctx context.Context, path string, create bool) (*os.Root, error) {
