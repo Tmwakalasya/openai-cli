@@ -24,6 +24,11 @@ cleans up its uncommitted files when I/O returns. If the process exits first,
 recovery or staging files can remain, as with an interrupted explicit installation.
 At most one setup worker runs in a CLI process.
 
+Homebrew installations use the same first-run setup described above. Installing,
+upgrading, or uninstalling the cask does not edit shell profiles or change picker
+preferences. After an eligible interactive `openai` run, open a new terminal to
+load the shortcut.
+
 To configure or remove persistent shortcuts explicitly:
 
 ```sh

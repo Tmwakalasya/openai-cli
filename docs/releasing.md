@@ -11,6 +11,10 @@ The reviewed checksums cover Linux and macOS hosts on x86_64 and arm64. The
 host architecture does not limit the Linux, macOS, and Windows release targets
 configured in `.goreleaser.yml`.
 
+The Homebrew cask installs the binary, ordinary completions, and manual without
+running picker setup hooks. Homebrew users receive the existing first-run setup;
+see [shell setup](image-picker-shell-setup.md) for eligibility and explicit setup.
+
 Linux packages install one fish startup file at
 `/usr/share/fish/vendor_conf.d/openai-picker.fish`. It activates at the first
 prompt after user configuration, respects opt-out and custom bindings, and only
