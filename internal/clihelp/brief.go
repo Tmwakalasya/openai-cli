@@ -38,20 +38,14 @@ func briefHelpAtWidth(command *cli.Command, invocation, path string, width int) 
 	}
 	if example := examples[path]; example != "" {
 		fmt.Fprintf(&out, "\nEXAMPLE\n  %s %s\n", invocation, example)
-		if path == "files create" {
+		if path == "files create" || path == "files upload" {
 			out.WriteString(wrapDescription("example.txt is the path to your existing file. Replace it with your file's path.", "", width))
 		}
 	}
-	children := command.VisibleCommands()
+	children := VisibleCommands(command)
 	if len(children) > 0 {
-		out.WriteString("\nCOMMANDS\n")
-		for i, child := range children {
-			if i == 10 {
-				fmt.Fprintf(&out, "  + %d more in full help\n", len(children)-i)
-				break
-			}
-			writeHelpEntry(&out, child.Name, shortDescription(child.Usage), width)
-		}
+		out.WriteByte('\n')
+		out.WriteString(commandList(command, width))
 		fmt.Fprintf(&out, "\nCommand help: %s %s COMMAND --help\n", invocation, path)
 	} else {
 		var required, optional []cli.Flag
@@ -105,6 +99,7 @@ var examples = map[string]string{
 	"models retrieve":   "models retrieve --model gpt-5.5",
 	"responses create":  `responses create --model gpt-5.5 --input "Say hello"`,
 	"files create":      `files create --file ./example.txt --purpose assistants`,
+	"files upload":      `files upload --file ./example.txt --purpose assistants`,
 	"images generate":   `images generate --prompt "A tiny orange robot"`,
 	"images inline":     "images inline on",
 	"images inline on":  "images inline on",
@@ -128,7 +123,7 @@ func writeBriefFlag(out *strings.Builder, flag cli.Flag, width int) {
 	}
 	var usage string
 	if doc, ok := flag.(cli.DocGenerationFlag); ok {
-		usage = shortDescription(doc.GetUsage())
+		usage = shortDescription(fileInputUsage(flag, doc.GetUsage()))
 		if doc.TakesValue() {
 			name += " VALUE"
 		}
@@ -138,10 +133,6 @@ func writeBriefFlag(out *strings.Builder, flag cli.Flag, width int) {
 	switch flag.Names()[0] {
 	case "model":
 		usage = "Model ID to use for this request."
-	case "file":
-		if strings.Contains(usage, "File object") {
-			usage = "Path to the file to upload."
-		}
 	case "input":
 		if usage == "" {
 			usage = "Text or other input to send to the model."
