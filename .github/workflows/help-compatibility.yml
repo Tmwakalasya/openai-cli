@@ -37,6 +37,7 @@ jobs:
             shells: bash,zsh
             bash-prefixes: true
           - os: windows-latest
+            image-models: true
             native-commands: true
             image-order: true
             list-helpers: true
@@ -46,6 +47,7 @@ jobs:
             shells: cmd,powershell,pwsh
             environment: true
           - os: macos-15-intel
+            image-models: true
             native-commands: true
             image-order: true
             welcome-public: true
@@ -60,6 +62,7 @@ jobs:
             gallery: true
             bash-prefixes: true
           - os: ubuntu-24.04-arm
+            image-models: true
             native-commands: true
             image-order: true
             welcome-public: true
@@ -72,6 +75,7 @@ jobs:
             pager: true
             bash-prefixes: true
           - os: windows-11-arm
+            image-models: true
             native-commands: true
             image-order: true
             welcome-public: true
@@ -295,6 +299,21 @@ jobs:
           go test -p 2 ./cmd/openai -count=1 -timeout=3m -v -json -run '^(TestMainImageUploadQuotedCountPreservesMultipart|TestMainImageEditQuotedStreamScalars|TestMainImageUploadMalformedScalarTextFailsBeforeRequest|TestMainImageUploadNullAndScalarLookingStringsKeepMultipartValues|TestMainImageEditStreamSavesFinalAndCloses|TestMainImageUploadBatchCollisionAndPartialFailure|TestMainImageGenerationStreamSavesOnlyFinalAndClosesResponse|TestMainImageGenerationPartialFailureKeepsSavedImage|TestMainImageGenerationClosedStdoutKeepsSavedImage|TestImageReceiptProcessRejectsNonPipeStdout)$' |
             Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'image-tests.jsonl') -Encoding utf8NoBOM -ErrorAction Stop
           exit $LASTEXITCODE
+      - name: Test image model discovery
+        if: matrix.image-models && runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -p 2 ./cmd/openai -count=1 -timeout=3m -v -json -run '^TestMainImageModels' \
+            | tee "$RUNNER_TEMP/image-model-discovery-tests.jsonl"
+      - name: Test Windows image model discovery
+        if: matrix.image-models && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          go test -p 2 ./cmd/openai -count=1 -timeout=3m -v -json -run '^TestMainImageModels' |
+            Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'image-model-discovery-tests.jsonl') -Encoding utf8NoBOM -ErrorAction Stop
+          exit $LASTEXITCODE
       - name: Test Windows image save boundaries and interruption
         if: runner.os == 'Windows'
         shell: pwsh
@@ -438,6 +457,7 @@ jobs:
         shell: bash
         env:
           CHECK_IMAGE_ORDER: ${{ matrix.image-order || false }}
+          CHECK_IMAGE_MODELS: ${{ matrix.image-models || false }}
           CHECK_NATIVE_COMMANDS: ${{ matrix.native-commands || false }}
           CHECK_WELCOME_PUBLIC: ${{ matrix.welcome-public || false }}
           CHECK_REQUEST_CONFIGURATION: ${{ matrix.request-configuration || false }}
@@ -485,6 +505,57 @@ jobs:
               return {root} | {f"{root}/{child}" for child in children}
 
           strict_packages = {}
+          if os.environ["CHECK_IMAGE_MODELS"] == "true":
+              model_failures = ["authentication", "rate_limit", "timeout", "server",
+                                "forbidden", "invalid_response", "request", "network"]
+              model_error_formats = ["default", "inherited_JSON", "text_override", "JSONL_override",
+                                     "raw_override", "YAML_override", "error_extraction"]
+              model_cases = {
+                  "TestMainImageModelsAllIncludesExactSnapshotNames": [],
+                  "TestMainImageModelsAuthenticationAndRateLimitStopChecks": ["authentication", "rate_limit"],
+                  "TestMainImageModelsExploreFallbackWarning": ["auto", "explore", "json"],
+                  "TestMainImageModelsExtraArgumentGuidance": ["json", "jsonl", "raw", "text", "yaml"],
+                  "TestMainImageModelsFailureGuidanceFormats": model_failures + [
+                      f"{failure}/{format}" for failure in model_failures for format in model_error_formats
+                  ],
+                  "TestMainImageModelsHelpAndOfflineMakeNoRequests": [
+                      "--format/json/images/models/--offline",
+                      "--format/json/images/models/--offline/--all",
+                      "help/images/models",
+                      "images/models/--help",
+                  ],
+                  "TestMainImageModelsInterruptPreservesCompletedResults": [],
+                  "TestMainImageModelsJSONAndHeaders": [],
+                  "TestMainImageModelsKeepsPartialResultsOnTimeoutResponse": [],
+                  "TestMainImageModelsPipeIsReadableAndAllRevealsUnavailable": ["all=false", "all=true"],
+                  "TestMainImageModelsPreservesExistingModelListing": [],
+                  "TestMainImageModelsPreservesMachineFormatsAndExtraction": [
+                      "JSON",
+                      "RaW",
+                      "automatic_extraction",
+                      "exact_model_extraction",
+                      "explicit_auto_extraction",
+                      "json",
+                      "jsonl",
+                      "raw",
+                      "raw_string",
+                      "text_extraction",
+                  ],
+                  "TestMainImageModelsRejectsMalformedMetadata": [
+                      "{\"id\":\"gpt-image-2.5-flare\",\"object\":\"file\"}",
+                      "{\"id\":\"gpt-image-2.5-flare\",\"object\":\"model\"",
+                      "{\"id\":\"gpt-image-2.5-flare\",\"object\":42}",
+                      "{\"id\":\"gpt-image-2.5-flare\",\"object\":[]}",
+                      "{\"id\":\"gpt-image-2.5-flare\",\"object\":null}",
+                      "{\"id\":\"gpt-image-2.5-flare\"_\"object\":\"model\"}",
+                  ],
+                  "TestMainImageModelsRequestDeadlineCancelsHTTP": [],
+              }
+              model_required = set()
+              for root, children in model_cases.items():
+                  model_required |= required_cases(root, children)
+              suites["image-model-discovery-tests.jsonl"] = model_required
+              strict_packages["image-model-discovery-tests.jsonl"] = "github.com/openai/openai-cli/cmd/openai"
 
           if os.environ["RUNNER_OS"] == "Linux":
               fish_examples = [
@@ -1148,6 +1219,7 @@ jobs:
                   "request-configuration-public-tests.jsonl", "request-configuration-helper-tests.jsonl",
                   "windows-native-shell-tests.jsonl", "windows-download-tests.jsonl",
                   "audio-tests.jsonl", "resource-tests.jsonl", "streaming-text-tests.jsonl",
+                  "image-model-discovery-tests.jsonl",
                   "welcome-public-tests.jsonl",
                   "list-navigation-helper-tests.jsonl", "list-projection-helper-tests.jsonl", "list-renderer-helper-tests.jsonl",
               } else set()
