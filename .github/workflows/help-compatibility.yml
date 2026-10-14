@@ -332,6 +332,14 @@ jobs:
           go test -p 2 ./internal/imageoutput -count=1 -timeout=3m -v -json -run '^(TestResolveDirectory|TestSaveResponseFormatsAndUniqueNames|TestSaveResponseConcurrentNames|TestSaveResponseCancellation|TestSaveResponseNamedCollisionDoesNotFollowSymlink|TestCheckNameDoesNotFollowOrRemoveSymlinks|TestCheckNameKeepsReservedProbeCollisions)$' |
             Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'image-save-helper-tests.jsonl') -Encoding utf8NoBOM -ErrorAction Stop
           exit $LASTEXITCODE
+      - name: Test Windows image model progress on stderr
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          go test -p 2 ./cmd/openai -count=1 -timeout=30s -v -json -run '^TestImageModelsWindowsStderrProgress$' |
+            Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'image-models-progress-tests.jsonl') -Encoding utf8NoBOM -ErrorAction Stop
+          exit $LASTEXITCODE
       - name: Test Windows audio output behavior
         if: runner.os == 'Windows'
         shell: pwsh
@@ -598,6 +606,8 @@ jobs:
               )
 
           if os.environ["RUNNER_OS"] == "Windows":
+              suites["image-models-progress-tests.jsonl"] = {"TestImageModelsWindowsStderrProgress"}
+              strict_packages["image-models-progress-tests.jsonl"] = "github.com/openai/openai-cli/cmd/openai"
               invocation_symlink_roots = {
                   "TestHelpInvocationFollowsInstalledSymlink", "TestHelpInvocationKeepsPowerShellScriptOnPath",
               }
