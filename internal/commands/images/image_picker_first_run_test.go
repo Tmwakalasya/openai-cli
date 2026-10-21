@@ -14,6 +14,71 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test-only access for presentation checks in the external integration package.
+var TestImagePickerShellSetupFailure = imagePickerShellSetupFailure
+
+func TestImagePickerFirstRunNativeSetupContract(t *testing.T) {
+	contract := os.Getenv("OPENAI_CLI_PICKER_SETUP_CONTRACT")
+	if contract == "" {
+		contract = "supported"
+	}
+	require.Contains(t, []string{"supported", "refused"}, contract)
+	for _, existing := range []bool{false, true} {
+		name := "absent"
+		if existing {
+			name = "existing"
+		}
+		t.Run(name, func(t *testing.T) {
+			home := pickerShellSetupHome(t)
+			targets := firstRunShellTargets(t, home, "bash")
+			original := []byte("# first-use startup\n")
+			if existing {
+				for _, target := range targets {
+					require.NoError(t, os.WriteFile(target.Profile, original, 0600))
+				}
+			}
+			before := firstRunFileSnapshot(t, home)
+			// Capture both real streams. Optional setup must never print its
+			// explicit-setup diagnostic or a success receipt.
+			output, err := os.CreateTemp(t.TempDir(), "first-use-output-")
+			require.NoError(t, err)
+			previousOut, previousErr := os.Stdout, os.Stderr
+			func() {
+				os.Stdout, os.Stderr = output, output
+				defer func() { os.Stdout, os.Stderr = previousOut, previousErr }()
+				err = setupImagePickerFirstRun(t.Context(), targets)
+			}()
+			require.NoError(t, output.Close())
+			if contract == "refused" {
+				require.ErrorIs(t, err, autocomplete.ErrPickerAtomicRenameUnsupported)
+				for _, target := range targets {
+					data, readErr := os.ReadFile(target.Profile)
+					if existing {
+						require.NoError(t, readErr)
+						require.Equal(t, original, data)
+						info, statErr := os.Stat(target.Profile)
+						require.NoError(t, statErr)
+						require.True(t, os.SameFile(before[target.Profile], info))
+						require.Equal(t, before[target.Profile].ModTime(), info.ModTime())
+					} else {
+						require.ErrorIs(t, readErr, os.ErrNotExist)
+					}
+				}
+			} else {
+				require.NoError(t, err)
+				for _, target := range targets {
+					installed, readErr := autocomplete.IsPickerInstalled(t.Context(), target)
+					require.NoError(t, readErr)
+					require.True(t, installed)
+				}
+			}
+			data, err := os.ReadFile(output.Name())
+			require.NoError(t, err)
+			require.Empty(t, data)
+		})
+	}
+}
+
 func TestImagePickerFirstRunEligibility(t *testing.T) {
 	for _, test := range []struct {
 		name string
