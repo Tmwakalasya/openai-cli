@@ -56,7 +56,7 @@ The recorder sources `scripts/demos/capture_and_render.sh` without modifying its
 It requires Python 3, asciinema 3.2.1, agg 1.9.0, ffmpeg, and ffprobe.
 The helper files must retain executable permission after placement.
 The renderer uses the exact font chain `Menlo,Apple Symbols` at 22 pixels.
-Menlo supplies the text metrics; Apple Symbols supplies missing glyphs, including Braille waveform cells.
+Menlo supplies the text metrics; Apple Symbols supplies missing glyphs.
 
 The fixture serves only the loopback speech endpoint.
 It validates the fake credential and known synthetic request fields.
@@ -73,8 +73,8 @@ Choices and typing must make no request.
 Ctrl+G starts one explicit synthetic generation.
 The harness checks request fields, measured duration, varying peaks, and exact saved audio bytes.
 It exercises Play and Save controls, History, 40×12, too-small blocking, explicit audition, restoration, and Clear.
-History, voice Preview, and Clear use the More actions menu.
-The ordinary form contains no command-preview row or keyboard footer.
+History opens directly from the form. More actions retains History, Preview voice, and Clear form.
+The ordinary form keeps command inspection in More actions and shows contextual keyboard shortcuts.
 Save coverage rejects `-`, then verifies the corrected destination contains the original audio bytes.
 Audition entries must remain absent from ordinary History.
 Clear must preserve retained results and exported files.
@@ -101,7 +101,7 @@ A private synthetic History entry supplies Result navigation without generation.
 Both cases require zero accepted or rejected fixture requests and strict cancellation cleanup.
 Settings End selects More actions. Clear is the third More action.
 Clear empties Text and Instructions without reseeding the constructor example.
-The navigation inventory contains 185 current-viewport checkpoints at each size.
+The navigation inventory contains 188 current-viewport checkpoints at each size.
 The navigation cases test Alt+Enter without submitting editor text.
 They leave Enter generation and the existing repeat-submit guard unchanged.
 
@@ -308,3 +308,5 @@ python3 -I -B scripts/demos/audio-workbench/test_observer.py
 
 These tests cover partial startup, deferred interruption, continued cleanup, source integrity, and scrollback saturation.
 They do not replace the full checker run against the exact candidate binary.
+
+The `wide` case runs at 186×34. It checks the 96-cell reading column, horizontal action navigation, retained More context, zero requests, and exit cleanup. Its fixed geometry supports internal frame rendering.
