@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"net/http"
 	"os"
 	"slices"
 	"strings"
@@ -22,6 +23,9 @@ import (
 type PreparationHooks struct {
 	PreflightMultipart  func(map[string]any) error
 	ValidateCredentials func() error
+	// ResolvedJSONOptions inspects finalized inputs before JSON observers run.
+	// Literal headers retain precedence over every returned request option.
+	ResolvedJSONOptions func(map[string]any, http.Header, []byte) []option.RequestOption
 	// EmbedMultipart owns partial-result cleanup on failure. On success, shared
 	// preparation takes responsibility for the returned uploads until encoding.
 	EmbedMultipart func(map[string]any, *OnceStdinReader) (map[string]any, error)
@@ -183,7 +187,16 @@ func FlagOptions(
 		requestContents.Queries = queriesWithFiles.(map[string]any)
 	}
 
-	encodedOptions, err := EncodeOptions(cmd, requestContents, nestedFormat, arrayFormat, bodyType, hooks.Encoding)
+	encoding := hooks.Encoding
+	var jsonOptions []option.RequestOption
+	if hooks.ResolvedJSONOptions != nil {
+		// Use the serialization boundary once, after validation and stream resolution.
+		// Copy the observer slice so repeated calls never retain this request's closure.
+		encoding.ObserveJSON = append([]func([]byte){func(body []byte) {
+			jsonOptions = hooks.ResolvedJSONOptions(requestContents.Headers, headers, body)
+		}}, encoding.ObserveJSON...)
+	}
+	encodedOptions, err := EncodeOptions(cmd, requestContents, nestedFormat, arrayFormat, bodyType, encoding)
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +204,7 @@ func FlagOptions(
 		pendingMultipartUploads = nil // the multipart request body owns them now.
 	}
 	options = append(options, encodedOptions...)
+	options = append(options, jsonOptions...)
 
 	return append(options, headerOptions...), nil
 }

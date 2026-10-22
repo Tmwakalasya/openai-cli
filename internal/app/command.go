@@ -51,6 +51,8 @@ func ConfigureCommand(root *cli.Command) {
 	registerAdminSetup(root)
 	admin.ConfigureCredentials(root)
 	webhooks.Configure(root, webhookCommandOptions())
+	describeAgentsCommands(root)
+	configureAgentsSessionCreation(root)
 	localcommands.ConfigureSubgroups(root)
 	localcommands.ConfigureTasks(root)
 	registerAudioCommands(root)

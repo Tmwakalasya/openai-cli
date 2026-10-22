@@ -2,6 +2,7 @@ package app
 
 import (
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/openai/openai-cli/internal/apiquery"
@@ -55,6 +56,9 @@ func flagOptionsWithStdin(
 	hooks := requestconfig.PreparationHooks{
 		PreflightMultipart:  func(body map[string]any) error { return audio.PreflightVoiceBody(cmd, body) },
 		ValidateCredentials: func() error { return admin.CheckCredentials(cmd) },
+		ResolvedJSONOptions: func(parameters map[string]any, headers http.Header, body []byte) []option.RequestOption {
+			return agentsResolvedRequestOptions(cmd, parameters, headers, body)
+		},
 		Encoding: requestconfig.EncodingHooks{
 			PrepareMultipart: func(body map[string]any) error { return images.PrepareMultipartBody(cmd, body) },
 			ValidateJSON:     func(body []byte) error { return validateProjectAPIKeyUpdate(cmd, body) },

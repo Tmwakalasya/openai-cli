@@ -42,7 +42,8 @@ func ValidateBaseURL(value, source string) error {
 
 // GetDefaultRequestOptions keeps feature middleware composition with its current owner.
 func GetDefaultRequestOptions(cmd *cli.Command) []option.RequestOption {
-	return requestconfig.DefaultOptions(cmd, Version, audio.CaptureText, captureSaveReceiptPolicy(cmd), webhooks.CaptureTestRequest)
+	opts := requestconfig.DefaultOptions(cmd, Version, audio.CaptureText, captureSaveReceiptPolicy(cmd), webhooks.CaptureTestRequest)
+	return append(opts, agentsRequestOptions(cmd)...)
 }
 
 func isTerminal(w io.Writer) bool { return terminal.IsWriterTerminal(w) }
@@ -394,6 +395,11 @@ type hasRawJSON interface {
 
 // ShowJSONIterator displays an iterator of values to the user. Use itemsToDisplay = -1 for no limit.
 func ShowJSONIterator[T any](iter jsonview.Iterator[T], itemsToDisplay int64, opts ShowJSONOpts) error {
+	route := transformers.Route{Operation: opts.Operation, OutputKind: opts.OutputKind}
+	if transformers.IsAgentsStream(route) {
+		state := transformers.AgentsStreamState{AllowNoInputSessionCreation: agentsSessionCreationWithoutInput(opts.Context)}
+		return showJSONIterator(&agentsStream[T]{source: iter, route: route, state: state}, itemsToDisplay, opts, transformers.Select)
+	}
 	return showJSONIterator(iter, itemsToDisplay, opts, transformers.Select)
 }
 
@@ -442,7 +448,11 @@ func showJSONIterator[T any](source jsonview.Iterator[T], itemsToDisplay int64, 
 	if strings.ToLower(opts.Format) == "explore" {
 		if isTerminal(opts.Stdout) {
 			out := clioutput.TerminalWriter{Writer: clioutput.Writer{Context: opts.Context, Sink: opts.Stdout}, File: opts.Stdout.(*os.File)}
-			err := jsonview.ExploreJSONStreamWithOutput(opts.Title, iter, out)
+			var explorer jsonview.Iterator[outputJSON] = iter
+			if transformers.IsAgentsStream(transformers.Route{Operation: opts.Operation, OutputKind: opts.OutputKind}) {
+				explorer = &agentsExplorerStream{source: iter}
+			}
+			err := jsonview.ExploreJSONStreamWithOutput(opts.Title, explorer, out)
 			if iterErr := iter.Err(); iterErr != nil && !errors.Is(err, iterErr) {
 				return errors.Join(err, iterErr)
 			}
