@@ -316,6 +316,9 @@ func showJSON(res gjson.Result, opts ShowJSONOpts, selectTransformer transformer
 	if handled, err := filecommands.ShowResult(res, filecommands.ResultOptions{ReadableOptions: fileResultOptions(opts), Quiet: quietOutput(opts.Context)}); handled {
 		return err
 	}
+	if handled, err := showProjectLifecycleResult(res, opts); handled {
+		return err
+	}
 	if isSavedImageRoute(opts, OutputResponse) {
 		if handled, err := images.ShowSavedResponse(opts.Context, []byte(res.Raw)); handled {
 			return err
